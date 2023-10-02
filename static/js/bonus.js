@@ -48,7 +48,75 @@ function setPlots(dataFull,id=0) {
         };
     Plotly.newPlot("bubble", data,layout);
 
+    // Initialize Gauge Use 0
+    // Use Scatter to initialize plot and set center, pie to create gauge
+    data = [{ type: 'scatter',
+    x: [0], y:[0],
+        marker: {size: 16, color:'850000'},
+        showlegend: false,
+        hoverinfo: 'none'
+    },
+    { 
+    type: 'pie',
+    hole: .5,
+    direction: "clockwise",
+    rotation: 90,
+    textinfo: 'text',
+    textposition:'inside', 
+    values: [50, 50/9, 50/9, 50/9, 50/9, 50/9, 50/9, 50/9, 50/9, 50/9],
+    text: [' ', '0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9'],
+
+    marker: {
+        colors: ['white',
+            'rgba(248, 243, 236, 1)',
+            'rgba(244, 241, 228, 1)',
+            'rgba(233, 230, 201, 1)',
+            'rgba(229, 232, 176, 1)',
+            'rgba(213, 229, 153, 1)',
+            'rgba(183, 205, 143, 1)',
+            'rgba(138, 192, 134, 1)',
+            'rgba(137, 188, 141, 1)',
+            'rgba(132, 181, 137, 1)'
+        ]
+    },
+    hoverinfo: 'none',
+
+    showlegend: false
+    }];
+
+    // Calculate Path (point from center to wfreq relative to circle)
+    let degrees = 180-20*parseFloat(info[id]['wfreq']),
+        radius = .5;
+    let radians = degrees * Math.PI / 180;
+    let x = radius * Math.cos(radians);
+    let y = radius * Math.sin(radians);
+
+    let path = `M -.0 -0.035 L .0 0.035 L ${String(x)} ${String(y)} Z`;
+
+    // Incorporate path and create shape
+    layout = {
+    shapes:[{
+        type: 'path',
+        path: path,
+        fillcolor: '850000',
+        line: {
+            color: '850000'
+        }
+        }],
+    title: 'Wash Frequency',
+    font: {size: 27},
+    height: 750,
+    width: 650,
+    xaxis: {zeroline:false, showticklabels:false,
+                showgrid: false, range: [-1, 1]},
+    yaxis: {zeroline:false, showticklabels:false,
+                showgrid: false, range: [-1, 1]}
     };
+
+    Plotly.newPlot('gauge',data,layout)
+
+
+};
 
 function setInfo(info,id=0) {
     // Initialize metadata
@@ -104,6 +172,27 @@ function resetInfo(info,id=0) {
 
 };
 
+function resetPath(info,id=0) {
+    // Reset and redraw path
+    let degrees = 180-20*parseFloat(info[id]['wfreq']),
+        radius = .5;
+    let radians = degrees * Math.PI / 180;
+    let x = radius * Math.cos(radians);
+    let y = radius * Math.sin(radians);
+
+    let path = `M -.0 -0.035 L .0 0.035 L ${String(x)} ${String(y)} Z`;
+    let update = {shapes:[{
+        type: 'path',
+        path: path,
+        fillcolor: '850000',
+        line: {
+            color: '850000'
+        }
+        }]}
+    Plotly.relayout('gauge',update)
+
+};
+
 function optionChanged() {
     const url = 'https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json'
     samples = d3.json(url).then(function(data) {
@@ -113,6 +202,7 @@ function optionChanged() {
         let id = dropdownMenu.property("value");
         resetPlots(samples,parseInt(id))
         resetInfo(info,id)
+        resetPath(info,id)
     });
 };
 
